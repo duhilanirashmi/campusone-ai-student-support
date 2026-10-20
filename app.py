@@ -178,7 +178,7 @@ if "latest_analysis" not in st.session_state:
 st.title("🎓 CampusOne")
 st.caption("AI Student Success & Career Support System")
 
-st.subheader("Coordinator Agent — Version 1.1")
+st.subheader("CampusOne Student Support Assistant")
 
 st.write(
     "Ask a question about academics, career opportunities, "
