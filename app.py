@@ -128,8 +128,6 @@ def academic_advisor_agent(question):
         "offerings, prerequisites, or degree requirements."
     )
 
-    # Priority: course and skill preparation for careers
-
     if is_course_skills_question(normalized):
 
         if is_business_analyst_question(normalized):
@@ -169,8 +167,6 @@ def academic_advisor_agent(question):
             limitation
         )
 
-    # Course prerequisites
-
     if contains_any(normalized, ["prerequisite"]):
 
         return create_response(
@@ -188,8 +184,6 @@ def academic_advisor_agent(question):
             ],
             limitation
         )
-
-    # Academic performance
 
     if contains_any(
         normalized,
@@ -212,8 +206,6 @@ def academic_advisor_agent(question):
             limitation
         )
 
-    # Graduation planning
-
     if contains_any(
         normalized,
         ["graduat", "degree", "credit"]
@@ -235,8 +227,6 @@ def academic_advisor_agent(question):
             ],
             limitation
         )
-
-    # General course planning
 
     if contains_any(
         normalized,
@@ -289,8 +279,6 @@ def career_opportunity_agent(question):
         "or verify employment eligibility."
     )
 
-    # Priority: role-specific course and skill questions
-
     if is_course_skills_question(normalized):
 
         if is_business_analyst_question(normalized):
@@ -330,8 +318,6 @@ def career_opportunity_agent(question):
             ],
             limitation
         )
-
-    # Resume and application materials
 
     if contains_any(
         normalized,
@@ -373,8 +359,6 @@ def career_opportunity_agent(question):
             limitation
         )
 
-    # Interview preparation
-
     if contains_any(normalized, ["interview"]):
 
         return create_response(
@@ -392,8 +376,6 @@ def career_opportunity_agent(question):
             ],
             limitation
         )
-
-    # Internship and job search
 
     if contains_any(
         normalized,
@@ -415,8 +397,6 @@ def career_opportunity_agent(question):
             ],
             limitation
         )
-
-    # Networking
 
     if contains_any(
         normalized,
@@ -628,10 +608,6 @@ def route_question(question):
         if matches:
             selected_agents[agent] = matches
 
-    # Identify primary service intent.
-    # Example: "tutoring for my statistics course"
-    # should prioritize Student Services.
-
     tutoring_intent = contains_any(
         normalized,
         ["tutoring", "tutor"]
@@ -656,9 +632,6 @@ def route_question(question):
             )
         }
 
-    # If the student asks about both courses and career skills,
-    # involve Academic and Career agents.
-
     elif is_course_skills_question(normalized):
 
         if contains_any(
@@ -675,8 +648,6 @@ def route_question(question):
             normalized,
             AGENT_KEYWORDS[CAREER]
         )
-
-    # Human review takes priority over automated guidance.
 
     human_review = any(
         re.search(pattern, normalized)
@@ -715,20 +686,21 @@ def coordinate_agents(routing_result):
 
 
 # ==================================================
-# COORDINATOR — COMBINED ACTION PLAN
+# COORDINATOR — MULTI-AGENT ACTION PLAN
 # ==================================================
 
 def create_combined_guidance(question, responses):
 
-    if not responses:
+    # A combined plan is only useful when multiple
+    # specialized agents contribute.
+
+    if len(responses) < 2:
         return None
 
     agent_names = {
         response["agent"]
         for response in responses
     }
-
-    # Specific multi-agent plan for course and skill preparation
 
     if (
         ACADEMIC in agent_names
@@ -772,7 +744,8 @@ def create_combined_guidance(question, responses):
             ]
         }
 
-    # General coordination: combine unique next steps
+    # General multi-agent coordination:
+    # combine unique next steps.
 
     combined_steps = []
     seen_steps = set()
@@ -784,16 +757,9 @@ def create_combined_guidance(question, responses):
             normalized_step = step.lower().strip()
 
             if normalized_step not in seen_steps:
+
                 combined_steps.append(step)
                 seen_steps.add(normalized_step)
-
-    if len(responses) == 1:
-
-        return {
-            "title": "Recommended Action Plan",
-            "summary": responses[0]["recommendation"],
-            "steps": combined_steps[:5]
-        }
 
     return {
         "title": "Coordinated Student Support Plan",
@@ -1025,44 +991,45 @@ elif result is not None:
                         + agent_result["limitation"]
                     )
 
-            # Coordinator combined guidance
+        # Only display combined guidance for multi-agent requests.
+
+        if (
+            len(result["agent_responses"]) > 1
+            and result["combined_guidance"] is not None
+        ):
 
             combined = result["combined_guidance"]
 
-            if combined:
+            st.divider()
 
-                st.divider()
+            st.subheader(
+                "Coordinator's Combined Guidance"
+            )
 
-                st.subheader(
-                    "Coordinator's Combined Guidance"
-                )
+            st.markdown(
+                "### " + combined["title"]
+            )
+
+            st.write(
+                combined["summary"]
+            )
+
+            st.write(
+                "**Recommended Next Steps:**"
+            )
+
+            for step in combined["steps"]:
 
                 st.markdown(
-                    "### " + combined["title"]
+                    "- " + step
                 )
 
-                st.write(
-                    combined["summary"]
-                )
-
-                st.write(
-                    "**Recommended Next Steps:**"
-                )
-
-                for step in combined["steps"]:
-
-                    st.markdown(
-                        "- " + step
-                    )
-
-                if len(result["agent_responses"]) > 1:
-
-                    st.success(
-                        "Agent coordination completed: "
-                        "recommendations from multiple "
-                        "specialized agents were combined "
-                        "into one action plan."
-                    )
+            st.success(
+                "Agent coordination completed: "
+                "recommendations from multiple "
+                "specialized agents were combined "
+                "into one action plan."
+            )
 
 
 # ==================================================
@@ -1097,8 +1064,14 @@ with st.expander(
 
     st.write(
         "The Coordinator identifies relevant agents, "
-        "collects their responses, and creates a combined "
-        "action plan using predefined coordination rules."
+        "collects their responses, and generates a combined "
+        "action plan when multiple specialized agents contribute."
+    )
+
+    st.write(
+        "For single-agent questions, CampusOne displays "
+        "the specialized agent's guidance directly without "
+        "duplicating the response."
     )
 
     st.write(
