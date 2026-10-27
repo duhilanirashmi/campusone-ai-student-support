@@ -547,9 +547,10 @@ elif result is not None:
             "a human advisor is required."
         )
 
-        st.caption(
-            "No specialized agent response was generated "
-            "because this request requires human oversight."
+        st.info(
+            "This request involves an official university decision. "
+            "Please contact the appropriate university advisor "
+            "for confirmation."
         )
 
     else:
@@ -615,13 +616,6 @@ elif result is not None:
                     "agents and combined into one result."
                 )
 
-    st.caption(
-        "Week 2 prototype: specialized agents provide "
-        "question-specific guidance using predefined rules. "
-        "LLM reasoning, RAG, MCP tools, and the Quality & "
-        "Policy Review Agent remain planned for later stages."
-    )
-
 
 # ==================================================
 # PROJECT INFORMATION
@@ -649,4 +643,11 @@ with st.expander("About the CampusOne Project"):
         "This application currently uses controlled sample "
         "guidance only. It does not access private student "
         "records or make official university decisions."
+    )
+
+    st.write(
+        "Development status: The specialized agents currently provide "
+        "question-specific guidance using predefined rules. "
+        "LLM reasoning, RAG, MCP tools, and the Quality & "
+        "Policy Review Agent are planned for later stages."
     )
