@@ -1,37 +1,52 @@
 import re
 import streamlit as st
 
+
+# ==================================================
+# CAMPUSONE — APPLICATION CONFIGURATION
+# ==================================================
+
 st.set_page_config(
     page_title="CampusOne | Student Support",
     page_icon="🎓",
     layout="wide"
 )
 
+
 # ==================================================
-# CAMPUSONE — WEEK 2
-# Question-specific specialized agent guidance
+# AGENT CONFIGURATION
 # ==================================================
 
+ACADEMIC = "Academic Advisor Agent"
+CAREER = "Career & Opportunity Agent"
+SERVICES = "Student Services Agent"
+
 AGENT_KEYWORDS = {
-    "Academic Advisor Agent": [
+    ACADEMIC: [
         "course", "class", "degree", "academic", "credit",
         "graduat", "semester", "prerequisite", "gpa",
         "assignment", "enroll", "curriculum", "major",
-        "grade", "study", "schedule"
+        "grade", "study", "schedule", "subject"
     ],
-    "Career & Opportunity Agent": [
+    CAREER: [
         "career", "job", "intern", "resume", "interview",
         "linkedin", "employment", "recruit", "skill",
         "business analyst", "networking", "application",
-        "cover letter", "portfolio"
+        "cover letter", "portfolio", "profession"
     ],
-    "Student Services Agent": [
-        "library", "campus", "tutoring", "workshop",
-        "student service", "student support", "housing",
-        "financial aid", "appointment", "resource",
-        "counseling", "office", "wellness", "transportation"
+    SERVICES: [
+        "library", "campus", "tutoring", "tutor",
+        "workshop", "student service", "student support",
+        "housing", "financial aid", "appointment",
+        "resource", "counseling", "office", "wellness",
+        "transportation"
     ]
 }
+
+
+# ==================================================
+# HUMAN REVIEW RULES
+# ==================================================
 
 HUMAN_REVIEW_PATTERNS = [
     r"\b(officially|official|guarantee|certify)\b.*\b(graduat|eligib|degree|complet)",
@@ -42,26 +57,61 @@ HUMAN_REVIEW_PATTERNS = [
 ]
 
 
+# ==================================================
+# SHARED HELPER FUNCTIONS
+# ==================================================
+
 def find_keywords(question, keywords):
     matches = []
 
     for keyword in keywords:
         pattern = r"(?<!\w)" + re.escape(keyword) + r"\w*"
 
-        if re.search(pattern, question):
+        if re.search(pattern, question.lower()):
             matches.append(keyword)
 
     return matches
 
 
-def select_guidance(question, guidance_rules, default_guidance):
-    normalized = question.lower()
+def contains_any(question, keywords):
+    return bool(find_keywords(question, keywords))
 
-    for keywords, guidance in guidance_rules:
-        if find_keywords(normalized, keywords):
-            return guidance
 
-    return default_guidance
+def create_response(agent, topic, recommendation, steps, limitation):
+    return {
+        "agent": agent,
+        "topic": topic,
+        "recommendation": recommendation,
+        "next_steps": steps,
+        "limitation": limitation
+    }
+
+
+def is_business_analyst_question(question):
+    return contains_any(
+        question,
+        ["business analyst", "business analysis"]
+    )
+
+
+def is_course_skills_question(question):
+    has_learning_intent = contains_any(
+        question,
+        [
+            "course", "class", "subject", "skill",
+            "learn", "focus", "prepare", "training"
+        ]
+    )
+
+    has_career_intent = contains_any(
+        question,
+        [
+            "career", "job", "intern",
+            "business analyst", "profession"
+        ]
+    )
+
+    return has_learning_intent and has_career_intent
 
 
 # ==================================================
@@ -70,81 +120,159 @@ def select_guidance(question, guidance_rules, default_guidance):
 
 def academic_advisor_agent(question):
 
-    guidance_rules = [
-        (
-            ["gpa", "grade", "academic performance"],
-            {
-                "topic": "Academic Performance",
-                "recommendation": (
-                    "Review your course grades and identify subjects "
-                    "where additional academic support may be helpful."
-                ),
-                "next_steps": [
-                    "Review course grading criteria.",
-                    "Discuss improvement strategies with instructors.",
-                    "Explore tutoring or academic support resources."
-                ]
-            }
-        ),
-        (
-            ["graduat", "degree", "credit"],
-            {
-                "topic": "Graduation Planning",
-                "recommendation": (
-                    "Review your degree requirements and compare them "
-                    "with your completed coursework."
-                ),
-                "next_steps": [
-                    "Review the official degree requirements.",
-                    "Identify remaining required courses and credits.",
-                    "Consult an academic advisor for confirmation."
-                ]
-            }
-        ),
-        (
-            ["prerequisite", "course", "class", "semester", "enroll"],
-            {
-                "topic": "Course Planning",
-                "recommendation": (
-                    "Plan upcoming courses based on degree requirements, "
-                    "prerequisites, and academic goals."
-                ),
-                "next_steps": [
-                    "Review available course descriptions.",
-                    "Check prerequisite requirements.",
-                    "Discuss your proposed schedule with an advisor."
-                ]
-            }
-        )
-    ]
+    normalized = question.lower()
 
-    default_guidance = {
-        "topic": "General Academic Guidance",
-        "recommendation": (
-            "Review your academic goals and available university "
-            "resources to identify appropriate next steps."
-        ),
-        "next_steps": [
-            "Identify your main academic concern.",
-            "Review relevant university guidance.",
-            "Contact an academic advisor when needed."
-        ]
-    }
-
-    result = select_guidance(
-        question,
-        guidance_rules,
-        default_guidance
+    limitation = (
+        "Academic subject areas are illustrative. "
+        "CampusOne does not verify actual university course "
+        "offerings, prerequisites, or degree requirements."
     )
 
-    return {
-        "agent": "Academic Advisor Agent",
-        **result,
-        "limitation": (
-            "This is general guidance based on controlled sample rules. "
-            "Official academic decisions require university confirmation."
+    # Priority: course and skill preparation for careers
+
+    if is_course_skills_question(normalized):
+
+        if is_business_analyst_question(normalized):
+
+            return create_response(
+                ACADEMIC,
+                "Academic Preparation for Business Analysis",
+                (
+                    "Consider academic subject areas such as "
+                    "business analytics, statistics, database "
+                    "management, data visualization, and business "
+                    "process analysis. These subjects can support "
+                    "preparation for Business Analyst internships."
+                ),
+                [
+                    "Review courses covering statistics and data analysis.",
+                    "Explore database management and SQL-related coursework.",
+                    "Consider business analytics and data visualization subjects.",
+                    "Check actual course availability and prerequisites with an academic advisor."
+                ],
+                limitation
+            )
+
+        return create_response(
+            ACADEMIC,
+            "Career-Aligned Academic Planning",
+            (
+                "Choose academic subjects that develop the knowledge "
+                "and analytical skills needed for your intended career."
+            ),
+            [
+                "Identify the academic subjects most relevant to your target role.",
+                "Compare those subjects with available university courses.",
+                "Prioritize coursework that includes practical projects.",
+                "Confirm prerequisites and degree applicability with an academic advisor."
+            ],
+            limitation
         )
-    }
+
+    # Course prerequisites
+
+    if contains_any(normalized, ["prerequisite"]):
+
+        return create_response(
+            ACADEMIC,
+            "Course Prerequisite Planning",
+            (
+                "Plan your upcoming courses by reviewing prerequisite "
+                "requirements and the sequence of courses in your program."
+            ),
+            [
+                "Identify courses you want to take next semester.",
+                "Review the published prerequisites for each course.",
+                "Check whether prerequisite courses have been completed.",
+                "Discuss your proposed schedule with an academic advisor."
+            ],
+            limitation
+        )
+
+    # Academic performance
+
+    if contains_any(
+        normalized,
+        ["gpa", "grade", "academic performance"]
+    ):
+
+        return create_response(
+            ACADEMIC,
+            "Academic Performance",
+            (
+                "Review your academic progress and identify subjects "
+                "where additional study or academic support may help."
+            ),
+            [
+                "Review course grading criteria.",
+                "Identify topics requiring additional practice.",
+                "Discuss improvement strategies with instructors.",
+                "Explore tutoring and academic support resources."
+            ],
+            limitation
+        )
+
+    # Graduation planning
+
+    if contains_any(
+        normalized,
+        ["graduat", "degree", "credit"]
+    ):
+
+        return create_response(
+            ACADEMIC,
+            "Graduation Planning",
+            (
+                "Review your published degree requirements and compare "
+                "them with your completed coursework to prepare for "
+                "a discussion with your academic advisor."
+            ),
+            [
+                "Review the official degree requirements.",
+                "Identify potentially remaining courses and credits.",
+                "Prepare questions about your graduation timeline.",
+                "Request official confirmation from an academic advisor."
+            ],
+            limitation
+        )
+
+    # General course planning
+
+    if contains_any(
+        normalized,
+        ["course", "class", "semester", "enroll", "schedule"]
+    ):
+
+        return create_response(
+            ACADEMIC,
+            "Course Planning",
+            (
+                "Plan your upcoming courses around academic goals, "
+                "published prerequisites, and program requirements."
+            ),
+            [
+                "Review course descriptions.",
+                "Identify relevant prerequisites.",
+                "Consider your academic workload.",
+                "Discuss your proposed schedule with an advisor."
+            ],
+            limitation
+        )
+
+    return create_response(
+        ACADEMIC,
+        "General Academic Guidance",
+        (
+            "Review your academic goals and identify the university "
+            "resources or academic guidance most relevant to your question."
+        ),
+        [
+            "Clarify your main academic concern.",
+            "Review official university academic information.",
+            "Contact an academic advisor when confirmation is needed."
+        ],
+        limitation
+    )
 
 
 # ==================================================
@@ -153,111 +281,179 @@ def academic_advisor_agent(question):
 
 def career_opportunity_agent(question):
 
-    guidance_rules = [
-        (
-            ["resume", "cover letter", "portfolio"],
-            {
-                "topic": "Application Preparation",
-                "recommendation": (
-                    "Tailor your application materials to the "
-                    "requirements of your target position."
-                ),
-                "next_steps": [
-                    "Review the job description.",
-                    "Highlight relevant experience and skills.",
-                    "Request feedback on your application materials."
-                ]
-            }
-        ),
-        (
-            ["interview"],
-            {
-                "topic": "Interview Preparation",
-                "recommendation": (
-                    "Prepare examples that demonstrate your experience, "
-                    "problem-solving skills, and professional strengths."
-                ),
-                "next_steps": [
-                    "Research the organization and position.",
-                    "Practice common interview questions.",
-                    "Prepare examples using the STAR method."
-                ]
-            }
-        ),
-        (
-            ["intern", "job", "employment", "application"],
-            {
-                "topic": "Internship and Job Search",
-                "recommendation": (
-                    "Identify opportunities aligned with your "
-                    "academic background and career interests."
-                ),
-                "next_steps": [
-                    "Review relevant internship or job descriptions.",
-                    "Identify required qualifications and skills.",
-                    "Prepare targeted applications and track progress."
-                ]
-            }
-        ),
-        (
-            ["linkedin", "networking", "recruit"],
-            {
-                "topic": "Professional Networking",
-                "recommendation": (
-                    "Build professional connections and communicate "
-                    "your interests clearly."
-                ),
-                "next_steps": [
-                    "Update your professional profile.",
-                    "Identify relevant industry professionals.",
-                    "Prepare personalized connection messages."
-                ]
-            }
-        ),
-        (
-            ["career", "skill", "business analyst"],
-            {
-                "topic": "Career Development",
-                "recommendation": (
-                    "Identify skills and experiences relevant to "
-                    "your preferred career path."
-                ),
-                "next_steps": [
-                    "Research target career roles.",
-                    "Identify relevant technical and professional skills.",
-                    "Develop a practical learning plan."
-                ]
-            }
-        )
-    ]
+    normalized = question.lower()
 
-    default_guidance = {
-        "topic": "General Career Guidance",
-        "recommendation": (
-            "Explore career options that align with your "
-            "interests, skills, and academic background."
-        ),
-        "next_steps": [
-            "Identify career interests.",
-            "Research relevant opportunities.",
-            "Consult university career services."
-        ]
-    }
-
-    result = select_guidance(
-        question,
-        guidance_rules,
-        default_guidance
+    limitation = (
+        "Career guidance is based on predefined examples. "
+        "CampusOne does not retrieve live job postings "
+        "or verify employment eligibility."
     )
 
-    return {
-        "agent": "Career & Opportunity Agent",
-        **result,
-        "limitation": (
-            "CampusOne does not currently retrieve live job postings "
-            "or verify employment eligibility."
+    # Priority: role-specific course and skill questions
+
+    if is_course_skills_question(normalized):
+
+        if is_business_analyst_question(normalized):
+
+            return create_response(
+                CAREER,
+                "Business Analyst Skills Development",
+                (
+                    "For Business Analyst internships, consider developing "
+                    "skills in Excel, SQL, Power BI, requirements gathering, "
+                    "business process analysis, problem-solving, and "
+                    "stakeholder communication."
+                ),
+                [
+                    "Practice Excel for data cleaning, analysis, and reporting.",
+                    "Build foundational SQL querying skills.",
+                    "Create a sample dashboard using Power BI or a similar tool.",
+                    "Practice documenting business requirements and process improvements.",
+                    "Review internship descriptions to identify frequently requested skills."
+                ],
+                limitation
+            )
+
+        return create_response(
+            CAREER,
+            "Career Skills Development",
+            (
+                "Identify the technical and professional skills commonly "
+                "requested for your target role and build practical "
+                "experience demonstrating those skills."
+            ),
+            [
+                "Review several descriptions for your target role.",
+                "Identify recurring technical and communication skills.",
+                "Select projects or learning activities that build those skills.",
+                "Document your progress for future applications."
+            ],
+            limitation
         )
-    }
+
+    # Resume and application materials
+
+    if contains_any(
+        normalized,
+        ["resume", "cover letter", "portfolio"]
+    ):
+
+        if is_business_analyst_question(normalized):
+
+            return create_response(
+                CAREER,
+                "Business Analyst Application Preparation",
+                (
+                    "Tailor your resume to highlight analytical projects, "
+                    "business problem-solving, relevant tools, and "
+                    "measurable accomplishments."
+                ),
+                [
+                    "Review the Business Analyst internship description.",
+                    "Highlight relevant Excel, SQL, or reporting experience.",
+                    "Describe projects using clear outcomes and measurable results.",
+                    "Request feedback before submitting your application."
+                ],
+                limitation
+            )
+
+        return create_response(
+            CAREER,
+            "Application Preparation",
+            (
+                "Tailor your resume and application materials "
+                "to the requirements of your target position."
+            ),
+            [
+                "Review the job description.",
+                "Highlight relevant experience and skills.",
+                "Use specific examples of accomplishments.",
+                "Request feedback on your application materials."
+            ],
+            limitation
+        )
+
+    # Interview preparation
+
+    if contains_any(normalized, ["interview"]):
+
+        return create_response(
+            CAREER,
+            "Interview Preparation",
+            (
+                "Prepare examples that demonstrate your skills, "
+                "problem-solving abilities, and relevant experience."
+            ),
+            [
+                "Research the organization and position.",
+                "Practice common interview questions.",
+                "Prepare examples using the STAR method.",
+                "Develop thoughtful questions for the interviewer."
+            ],
+            limitation
+        )
+
+    # Internship and job search
+
+    if contains_any(
+        normalized,
+        ["intern", "job", "employment", "application"]
+    ):
+
+        return create_response(
+            CAREER,
+            "Internship and Job Search",
+            (
+                "Identify opportunities aligned with your "
+                "academic background, interests, and career goals."
+            ),
+            [
+                "Review relevant internship or job descriptions.",
+                "Identify recurring qualifications and skills.",
+                "Prepare targeted application materials.",
+                "Track applications and follow-up activities."
+            ],
+            limitation
+        )
+
+    # Networking
+
+    if contains_any(
+        normalized,
+        ["linkedin", "networking", "recruit"]
+    ):
+
+        return create_response(
+            CAREER,
+            "Professional Networking",
+            (
+                "Develop professional connections and communicate "
+                "your career interests clearly."
+            ),
+            [
+                "Update your professional profile.",
+                "Identify relevant professionals and organizations.",
+                "Prepare personalized connection messages.",
+                "Follow up professionally when appropriate."
+            ],
+            limitation
+        )
+
+    return create_response(
+        CAREER,
+        "General Career Development",
+        (
+            "Explore career opportunities that align with your "
+            "interests, strengths, and academic background."
+        ),
+        [
+            "Identify your preferred career direction.",
+            "Research relevant roles and qualifications.",
+            "Develop a practical learning plan.",
+            "Explore available career support resources."
+        ],
+        limitation
+    )
 
 
 # ==================================================
@@ -266,145 +462,224 @@ def career_opportunity_agent(question):
 
 def student_services_agent(question):
 
-    guidance_rules = [
-        (
-            ["tutoring", "workshop"],
-            {
-                "topic": "Academic Support Services",
-                "recommendation": (
-                    "Explore university tutoring programs and "
-                    "academic workshops relevant to your needs."
-                ),
-                "next_steps": [
-                    "Review the official student support directory.",
-                    "Identify relevant tutoring or workshop options.",
-                    "Confirm availability with the university."
-                ]
-            }
-        ),
-        (
-            ["library"],
-            {
-                "topic": "Library Resources",
-                "recommendation": (
-                    "Explore university library services for "
-                    "research materials and academic support."
-                ),
-                "next_steps": [
-                    "Visit the university library website.",
-                    "Review available research resources.",
-                    "Contact library staff for assistance."
-                ]
-            }
-        ),
-        (
-            ["housing", "transportation"],
-            {
-                "topic": "Campus Living Resources",
-                "recommendation": (
-                    "Review university-provided information about "
-                    "housing and transportation resources."
-                ),
-                "next_steps": [
-                    "Check official university resources.",
-                    "Compare available support options.",
-                    "Contact the relevant university office."
-                ]
-            }
-        ),
-        (
-            ["counseling", "wellness"],
-            {
-                "topic": "Student Wellbeing Resources",
-                "recommendation": (
-                    "Explore university wellbeing and student "
-                    "support services."
-                ),
-                "next_steps": [
-                    "Review the official student services website.",
-                    "Identify the appropriate support office.",
-                    "Contact university staff for assistance."
-                ]
-            }
-        ),
-        (
-            ["financial aid"],
-            {
-                "topic": "Financial Aid Information",
-                "recommendation": (
-                    "Review official university financial aid "
-                    "information and available support channels."
-                ),
-                "next_steps": [
-                    "Review published financial aid guidance.",
-                    "Prepare questions about your situation.",
-                    "Contact the financial aid office."
-                ]
-            }
-        )
-    ]
+    normalized = question.lower()
 
-    default_guidance = {
-        "topic": "General Student Services",
-        "recommendation": (
-            "Explore official university student services "
-            "and support resources."
-        ),
-        "next_steps": [
-            "Identify the type of support needed.",
-            "Review the official student services directory.",
-            "Contact the appropriate university office."
-        ]
-    }
-
-    result = select_guidance(
-        question,
-        guidance_rules,
-        default_guidance
+    limitation = (
+        "CampusOne does not currently verify university "
+        "service availability, office locations, schedules, "
+        "or appointment information."
     )
 
-    return {
-        "agent": "Student Services Agent",
-        **result,
-        "limitation": (
-            "CampusOne does not yet have verified university "
-            "service locations, schedules, or appointment availability."
+    if contains_any(normalized, ["tutoring", "tutor"]):
+
+        return create_response(
+            SERVICES,
+            "Tutoring and Academic Support",
+            (
+                "Explore university tutoring resources or academic "
+                "support options related to the subject where "
+                "you need assistance."
+            ),
+            [
+                "Identify the course or topic requiring support.",
+                "Review the official university student support directory.",
+                "Check whether tutoring or instructor office hours are available.",
+                "Confirm service availability with the university."
+            ],
+            limitation
         )
-    }
+
+    if contains_any(normalized, ["workshop"]):
+
+        return create_response(
+            SERVICES,
+            "Student Workshops",
+            (
+                "Explore academic or professional development "
+                "workshops relevant to your learning goals."
+            ),
+            [
+                "Review university workshop announcements.",
+                "Identify workshops related to your interests.",
+                "Check published registration information.",
+                "Confirm event details with the organizer."
+            ],
+            limitation
+        )
+
+    if contains_any(normalized, ["library"]):
+
+        return create_response(
+            SERVICES,
+            "Library Resources",
+            (
+                "Explore library resources that may support "
+                "your research and academic work."
+            ),
+            [
+                "Visit the official university library website.",
+                "Review available databases and research resources.",
+                "Identify relevant materials for your topic.",
+                "Contact library staff for additional assistance."
+            ],
+            limitation
+        )
+
+    if contains_any(
+        normalized,
+        ["housing", "transportation"]
+    ):
+
+        return create_response(
+            SERVICES,
+            "Campus Living Resources",
+            (
+                "Review official university information about "
+                "housing and transportation support options."
+            ),
+            [
+                "Review available university information.",
+                "Identify the type of support needed.",
+                "Compare published resources.",
+                "Contact the appropriate university office."
+            ],
+            limitation
+        )
+
+    if contains_any(
+        normalized,
+        ["counseling", "wellness"]
+    ):
+
+        return create_response(
+            SERVICES,
+            "Student Wellbeing Resources",
+            (
+                "Explore official student wellbeing resources "
+                "and available university support channels."
+            ),
+            [
+                "Review the official student services website.",
+                "Identify an appropriate support resource.",
+                "Check available contact information.",
+                "Reach out to the relevant university office."
+            ],
+            limitation
+        )
+
+    if contains_any(normalized, ["financial aid"]):
+
+        return create_response(
+            SERVICES,
+            "Financial Aid Information",
+            (
+                "Review official university financial aid "
+                "information and support channels."
+            ),
+            [
+                "Review published financial aid guidance.",
+                "Prepare questions about your situation.",
+                "Identify the appropriate financial aid contact.",
+                "Request official clarification when needed."
+            ],
+            limitation
+        )
+
+    return create_response(
+        SERVICES,
+        "General Student Services",
+        (
+            "Explore official university services "
+            "and resources relevant to your needs."
+        ),
+        [
+            "Identify the type of support required.",
+            "Review the official student services directory.",
+            "Contact the appropriate university office."
+        ],
+        limitation
+    )
 
 
 AGENT_FUNCTIONS = {
-    "Academic Advisor Agent": academic_advisor_agent,
-    "Career & Opportunity Agent": career_opportunity_agent,
-    "Student Services Agent": student_services_agent
+    ACADEMIC: academic_advisor_agent,
+    CAREER: career_opportunity_agent,
+    SERVICES: student_services_agent
 }
 
 
 # ==================================================
-# COORDINATOR AGENT
+# COORDINATOR — QUESTION ROUTING
 # ==================================================
 
 def route_question(question):
 
-    normalized_question = question.lower().strip()
+    normalized = question.lower().strip()
 
-    if not normalized_question:
+    if not normalized:
         return None
 
     selected_agents = {}
 
     for agent, keywords in AGENT_KEYWORDS.items():
 
-        matches = find_keywords(
-            normalized_question,
-            keywords
-        )
+        matches = find_keywords(normalized, keywords)
 
         if matches:
             selected_agents[agent] = matches
 
+    # Identify primary service intent.
+    # Example: "tutoring for my statistics course"
+    # should prioritize Student Services.
+
+    tutoring_intent = contains_any(
+        normalized,
+        ["tutoring", "tutor"]
+    )
+
+    academic_planning_intent = contains_any(
+        normalized,
+        [
+            "prerequisite", "course planning",
+            "degree requirement", "graduat",
+            "which course", "which class",
+            "semester schedule"
+        ]
+    )
+
+    if tutoring_intent and not academic_planning_intent:
+
+        selected_agents = {
+            SERVICES: find_keywords(
+                normalized,
+                AGENT_KEYWORDS[SERVICES]
+            )
+        }
+
+    # If the student asks about both courses and career skills,
+    # involve Academic and Career agents.
+
+    elif is_course_skills_question(normalized):
+
+        if contains_any(
+            normalized,
+            ["course", "class", "subject"]
+        ):
+
+            selected_agents[ACADEMIC] = find_keywords(
+                normalized,
+                AGENT_KEYWORDS[ACADEMIC]
+            )
+
+        selected_agents[CAREER] = find_keywords(
+            normalized,
+            AGENT_KEYWORDS[CAREER]
+        )
+
+    # Human review takes priority over automated guidance.
+
     human_review = any(
-        re.search(pattern, normalized_question)
+        re.search(pattern, normalized)
         for pattern in HUMAN_REVIEW_PATTERNS
     )
 
@@ -415,25 +690,125 @@ def route_question(question):
     }
 
 
+# ==================================================
+# COORDINATOR — AGENT COMMUNICATION
+# ==================================================
+
 def coordinate_agents(routing_result):
 
-    responses = []
-
     if routing_result["human_review"]:
-        return responses
+        return []
+
+    responses = []
 
     for agent_name in routing_result["agents"]:
 
         agent_function = AGENT_FUNCTIONS[agent_name]
 
-        agent_result = agent_function(
+        response = agent_function(
             routing_result["question"]
         )
 
-        responses.append(agent_result)
+        responses.append(response)
 
     return responses
 
+
+# ==================================================
+# COORDINATOR — COMBINED ACTION PLAN
+# ==================================================
+
+def create_combined_guidance(question, responses):
+
+    if not responses:
+        return None
+
+    agent_names = {
+        response["agent"]
+        for response in responses
+    }
+
+    # Specific multi-agent plan for course and skill preparation
+
+    if (
+        ACADEMIC in agent_names
+        and CAREER in agent_names
+        and is_course_skills_question(question)
+    ):
+
+        if is_business_analyst_question(question):
+
+            return {
+                "title": "Recommended Academic and Career Preparation",
+                "summary": (
+                    "Consider coursework in business analytics, "
+                    "statistics, database management, and data "
+                    "visualization. Alongside your coursework, "
+                    "develop practical skills in Excel, SQL, "
+                    "Power BI, requirements gathering, and "
+                    "stakeholder communication."
+                ),
+                "steps": [
+                    "Review relevant university course descriptions and prerequisites.",
+                    "Prioritize practical analytical and business-focused projects.",
+                    "Build a small portfolio demonstrating Excel, SQL, or dashboard skills.",
+                    "Compare your skills with Business Analyst internship descriptions.",
+                    "Confirm your academic plan with a university advisor."
+                ]
+            }
+
+        return {
+            "title": "Academic and Career Development Plan",
+            "summary": (
+                "Align your academic learning with the technical "
+                "and professional skills required for your "
+                "preferred career direction."
+            ),
+            "steps": [
+                "Identify relevant academic subjects.",
+                "Review the skills requested in target job descriptions.",
+                "Select projects that develop those skills.",
+                "Review your academic plan with an advisor."
+            ]
+        }
+
+    # General coordination: combine unique next steps
+
+    combined_steps = []
+    seen_steps = set()
+
+    for response in responses:
+
+        for step in response["next_steps"]:
+
+            normalized_step = step.lower().strip()
+
+            if normalized_step not in seen_steps:
+                combined_steps.append(step)
+                seen_steps.add(normalized_step)
+
+    if len(responses) == 1:
+
+        return {
+            "title": "Recommended Action Plan",
+            "summary": responses[0]["recommendation"],
+            "steps": combined_steps[:5]
+        }
+
+    return {
+        "title": "Coordinated Student Support Plan",
+        "summary": (
+            "Your question involves more than one area of student "
+            "support. The following action plan brings together "
+            "the recommendations from the relevant agents."
+        ),
+        "steps": combined_steps[:6]
+    }
+
+
+# ==================================================
+# MAIN ANALYSIS
+# ==================================================
 
 def analyze_question(question):
 
@@ -442,8 +817,15 @@ def analyze_question(question):
     if routing_result is None:
         return None
 
-    routing_result["agent_responses"] = coordinate_agents(
-        routing_result
+    responses = coordinate_agents(routing_result)
+
+    routing_result["agent_responses"] = responses
+
+    routing_result["combined_guidance"] = (
+        create_combined_guidance(
+            routing_result["question"],
+            responses
+        )
     )
 
     return routing_result
@@ -462,9 +844,14 @@ if "latest_analysis" not in st.session_state:
 # ==================================================
 
 st.title("🎓 CampusOne")
-st.caption("AI Student Success & Career Support System")
 
-st.subheader("CampusOne Student Support Assistant")
+st.caption(
+    "AI Student Success & Career Support System"
+)
+
+st.subheader(
+    "CampusOne Student Support Assistant"
+)
 
 st.write(
     "Ask a question about academics, career opportunities, "
@@ -472,6 +859,7 @@ st.write(
     "appropriate specialized agents and coordinate their "
     "responses."
 )
+
 
 with st.form("campusone_question_form"):
 
@@ -489,8 +877,12 @@ with st.form("campusone_question_form"):
         type="primary"
     )
 
+
 if submitted:
-    st.session_state.latest_analysis = analyze_question(question)
+
+    st.session_state.latest_analysis = (
+        analyze_question(question)
+    )
 
 
 # ==================================================
@@ -499,30 +891,55 @@ if submitted:
 
 result = st.session_state.latest_analysis
 
+
 if submitted and result is None:
-    st.warning("Please enter a question.")
+
+    st.warning(
+        "Please enter a question."
+    )
+
 
 elif result is not None:
 
     st.divider()
 
-    st.subheader("Coordinator's Decision")
+    st.subheader(
+        "Coordinator's Decision"
+    )
 
-    st.write("**Student Question:**")
-    st.write(result["question"])
+    st.write(
+        "**Student Question:**"
+    )
+
+    st.write(
+        result["question"]
+    )
+
+    # Display selected agents
 
     if result["agents"]:
 
-        st.write("**Selected Agents:**")
+        st.write(
+            "**Selected Agents:**"
+        )
 
         for agent, matches in result["agents"].items():
 
             st.success(agent)
 
-            st.caption(
-                "Routing reason: Detected "
-                + ", ".join(matches)
-            )
+            if matches:
+
+                st.caption(
+                    "Routing reason: Detected "
+                    + ", ".join(matches)
+                )
+
+            else:
+
+                st.caption(
+                    "Routing reason: Question intent "
+                    "requires this specialized agent."
+                )
 
         if len(result["agents"]) > 1:
 
@@ -531,16 +948,20 @@ elif result is not None:
                 "will collect their individual responses."
             )
 
-    else:
+    elif not result["human_review"]:
 
         st.warning(
             "The Coordinator could not identify a suitable "
             "specialized agent. Please rephrase your question."
         )
 
+    # Human escalation
+
     if result["human_review"]:
 
-        st.error("Human Advisor Review Required")
+        st.error(
+            "Human Advisor Review Required"
+        )
 
         st.write(
             "I cannot make this determination; "
@@ -548,9 +969,10 @@ elif result is not None:
         )
 
         st.info(
-            "This request involves an official university decision. "
-            "Please contact the appropriate university advisor "
-            "for confirmation."
+            "This request involves an official university "
+            "decision or an area requiring human review. "
+            "Please contact the appropriate university "
+            "advisor for confirmation."
         )
 
     else:
@@ -560,11 +982,15 @@ elif result is not None:
             "by the current routing rules."
         )
 
+        # Specialized agent responses
+
         if result["agent_responses"]:
 
             st.divider()
 
-            st.subheader("Specialized Agent Responses")
+            st.subheader(
+                "Specialized Agent Responses"
+            )
 
             for agent_result in result["agent_responses"]:
 
@@ -584,37 +1010,59 @@ elif result is not None:
                         + agent_result["recommendation"]
                     )
 
-                    st.write("**Suggested Next Steps:**")
+                    st.write(
+                        "**Suggested Next Steps:**"
+                    )
 
                     for step in agent_result["next_steps"]:
-                        st.markdown("- " + step)
+
+                        st.markdown(
+                            "- " + step
+                        )
 
                     st.caption(
                         "Limitation: "
                         + agent_result["limitation"]
                     )
 
-            st.divider()
+            # Coordinator combined guidance
 
-            st.subheader("Coordinator's Combined Guidance")
+            combined = result["combined_guidance"]
 
-            for agent_result in result["agent_responses"]:
+            if combined:
+
+                st.divider()
+
+                st.subheader(
+                    "Coordinator's Combined Guidance"
+                )
 
                 st.markdown(
-                    "**" + agent_result["agent"] + "**"
+                    "### " + combined["title"]
                 )
 
                 st.write(
-                    agent_result["recommendation"]
+                    combined["summary"]
                 )
 
-            if len(result["agent_responses"]) > 1:
-
-                st.success(
-                    "Agent coordination completed: responses "
-                    "were collected from multiple specialized "
-                    "agents and combined into one result."
+                st.write(
+                    "**Recommended Next Steps:**"
                 )
+
+                for step in combined["steps"]:
+
+                    st.markdown(
+                        "- " + step
+                    )
+
+                if len(result["agent_responses"]) > 1:
+
+                    st.success(
+                        "Agent coordination completed: "
+                        "recommendations from multiple "
+                        "specialized agents were combined "
+                        "into one action plan."
+                    )
 
 
 # ==================================================
@@ -623,7 +1071,9 @@ elif result is not None:
 
 st.divider()
 
-with st.expander("About the CampusOne Project"):
+with st.expander(
+    "About the CampusOne Project"
+):
 
     st.write(
         "CampusOne is an approved five-agent student support "
@@ -633,21 +1083,27 @@ with st.expander("About the CampusOne Project"):
     )
 
     st.write(
-        "The complete system will include the Coordinator "
-        "Agent, Academic Advisor Agent, Career & Opportunity "
-        "Agent, Student Services Agent, and Quality & "
+        "The planned system includes the Coordinator Agent, "
+        "Academic Advisor Agent, Career & Opportunity Agent, "
+        "Student Services Agent, and Quality & Policy Review Agent."
+    )
+
+    st.write(
+        "The current application uses controlled sample "
+        "guidance and predefined routing rules. "
+        "It does not access private student records "
+        "or make official university decisions."
+    )
+
+    st.write(
+        "The Coordinator identifies relevant agents, "
+        "collects their responses, and creates a combined "
+        "action plan using predefined coordination rules."
+    )
+
+    st.write(
+        "Future development may include LLM reasoning, "
+        "retrieval-augmented generation (RAG), "
+        "MCP tools, and a dedicated Quality & "
         "Policy Review Agent."
-    )
-
-    st.write(
-        "This application currently uses controlled sample "
-        "guidance only. It does not access private student "
-        "records or make official university decisions."
-    )
-
-    st.write(
-        "Development status: The specialized agents currently provide "
-        "question-specific guidance using predefined rules. "
-        "LLM reasoning, RAG, MCP tools, and the Quality & "
-        "Policy Review Agent are planned for later stages."
     )
