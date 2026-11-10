@@ -1019,12 +1019,12 @@ elif result is not None:
                 "will collect their individual responses."
             )
 
-            if not result["agents"] and not result["human_review"]:
-
-        st.warning(
-            "The Coordinator could not identify a suitable "
-            "specialized agent. Please rephrase your question."
-        )
+            
+        if not result["agents"] and not result["human_review"]:
+            st.warning(
+                "The Coordinator could not identify a suitable "
+                "specialized agent. Please rephrase your question."
+            )
 
     # Human escalation
 
