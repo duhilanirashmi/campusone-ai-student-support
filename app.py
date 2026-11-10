@@ -94,8 +94,8 @@ def is_business_analyst_question(question):
     )
 
 
- def is_course_skills_question(question):
-    has_learning_intent = contains_any(
+def is_course_skills_question(question):
+   has_learning_intent = contains_any(
         question,
         [
             "course", "class", "subject", "skill",
