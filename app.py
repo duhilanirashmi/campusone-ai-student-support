@@ -662,6 +662,19 @@ def route_question(question):
 
 
 # ==================================================
+# WEEK 3 — STRUCTURED AGENT MESSAGES
+# ==================================================
+
+def create_agent_message(agent_name, question):
+    return {
+        "sender": "Coordinator Agent",
+        "recipient": agent_name,
+        "student_question": question,
+        "purpose": "Provide relevant student support guidance",
+        "status": "dispatched"
+    }
+
+# ==================================================
 # COORDINATOR — AGENT COMMUNICATION
 # ==================================================
 
