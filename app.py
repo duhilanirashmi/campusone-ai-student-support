@@ -1096,36 +1096,40 @@ elif result is not None:
                         + agent_result["limitation"]
                     )
                     
+        
         # WEEK 3 — AGENT COMMUNICATION TRACE
-        with st.expander("Agent Communication Trace", expanded=False):
-            st.caption(
-                "Structured in-process communication between "
-                "the Coordinator and specialized agents."
-            )
-
-            for agent_result in result["agent_responses"]:
-                metadata = agent_result.get("message", {})
-
-                agent_name = agent_result["agent"]
-
-                st.write(
-                    f"**Coordinator Agent → {agent_name}**"
-                )
+        if developer_view:
+            with st.expander("Agent Communication Trace", expanded=False):
                 st.caption(
-                    "Request dispatched with student question "
-                    "and guidance purpose."
+                    "Structured in-process communication between "
+                    "the Coordinator and specialized agents."
                 )
 
-                st.write(
-                    f"**{metadata.get('sender', agent_name)} → "
-                    f"{metadata.get('recipient', 'Coordinator Agent')}**"
-                )
-                st.caption(
-                    f"Response status: "
-                    f"{metadata.get('status', 'unknown')}"
-                )
+                for agent_result in result["agent_responses"]:
+                    metadata = agent_result.get("message", {})
+                    agent_name = agent_result["agent"]
 
-                st.divider()
+                    st.write(
+                        f"**Coordinator Agent → {agent_name}**"
+                    )
+
+                    st.caption(
+                        "Request dispatched with student question "
+                        "and guidance purpose."
+                    )
+
+                    st.write(
+                        f"**{metadata.get('sender', agent_name)} → "
+                        f"{metadata.get('recipient', 'Coordinator Agent')}**"
+                    )
+
+                    st.caption(
+                        f"Response status: "
+                        f"{metadata.get('status', 'unknown')}"
+                    )
+
+                    st.divider()
+
 
         # Only display combined guidance for multi-agent requests.
 
