@@ -919,6 +919,13 @@ st.subheader(
     "CampusOne Student Support Assistant"
 )
 
+# WEEK 3 — STUDENT / DEVELOPER DEMO VIEW
+developer_view = st.toggle(
+    "Developer Demo View",
+    value=False,
+    help="Show agent routing, communication, and review details."
+)
+
 st.write(
     "Ask a question about academics, career opportunities, "
     "or university services. CampusOne will identify the "
