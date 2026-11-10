@@ -861,16 +861,32 @@ def create_combined_guidance(question, responses):
 # ==================================================
 
 def analyze_question(question):
-
     routing_result = route_question(question)
 
     if routing_result is None:
         return None
 
+    # Step 1: Collect responses from specialized agents.
     responses = coordinate_agents(routing_result)
 
+    # Step 2: Review responses before approving guidance.
+    quality_review = quality_policy_review_agent(
+        routing_result,
+        responses
+    )
+
+    routing_result["quality_review"] = quality_review
+
+    # Step 3: Prevent unapproved guidance from being displayed.
+    if not quality_review["approved"]:
+        routing_result["agent_responses"] = []
+        routing_result["combined_guidance"] = None
+        return routing_result
+
+    # Step 4: Store approved responses.
     routing_result["agent_responses"] = responses
 
+    # Step 5: Generate combined guidance only after approval.
     routing_result["combined_guidance"] = (
         create_combined_guidance(
             routing_result["question"],
