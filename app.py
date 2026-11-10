@@ -680,6 +680,9 @@ def create_agent_message(agent_name, question):
 
 def coordinate_agents(routing_result):
 
+    
+def coordinate_agents(routing_result):
+
     if routing_result["human_review"]:
         return []
 
@@ -687,11 +690,26 @@ def coordinate_agents(routing_result):
 
     for agent_name in routing_result["agents"]:
 
+        # Coordinator prepares a structured request.
+        message = create_agent_message(
+            agent_name,
+            routing_result["question"]
+        )
+
+        # Deliver the question to the selected agent.
         agent_function = AGENT_FUNCTIONS[agent_name]
 
         response = agent_function(
-            routing_result["question"]
+            message["student_question"]
         )
+
+        # Attach communication metadata to the response.
+        response["message"] = {
+            "sender": agent_name,
+            "recipient": "Coordinator Agent",
+            "status": "completed",
+            "request_purpose": message["purpose"]
+        }
 
         responses.append(response)
 
