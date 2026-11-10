@@ -580,7 +580,62 @@ def student_services_agent(question):
         ],
         limitation
     )
+    
+# ==================================================
+# WEEK 3 — QUALITY & POLICY REVIEW AGENT
+# ==================================================
 
+def quality_policy_review_agent(routing_result, agent_responses):
+    issues = []
+
+    if routing_result.get("human_review", False):
+        return {
+            "agent": "Quality & Policy Review Agent",
+            "status": "human_review_required",
+            "approved": False,
+            "issues": [
+                "Official university decisions require human review."
+            ]
+        }
+
+    required_fields = [
+        "agent",
+        "topic",
+        "recommendation",
+        "next_steps",
+        "limitation"
+    ]
+
+    if not agent_responses:
+        issues.append("No specialized agent responses available.")
+
+    for response in agent_responses:
+        agent_name = response.get("agent", "Unknown Agent")
+
+        for field in required_fields:
+            if not response.get(field):
+                issues.append(
+                    f"{agent_name}: Missing or empty field '{field}'."
+                )
+
+        if not isinstance(response.get("next_steps"), list):
+            issues.append(
+                f"{agent_name}: Next steps must be a list."
+            )
+
+        metadata = response.get("message", {})
+
+        if metadata.get("status") != "completed":
+            issues.append(
+                f"{agent_name}: Communication not completed."
+            )
+
+    return {
+        "agent": "Quality & Policy Review Agent",
+        "status": "passed" if not issues else "flagged",
+        "approved": not issues,
+        "issues": issues
+    }
 
 AGENT_FUNCTIONS = {
     ACADEMIC: academic_advisor_agent,
