@@ -1083,7 +1083,8 @@ elif result is not None:
         )
 
     
-        elif developer_view:
+                
+        if developer_view and not result["human_review"]:
             st.write(
                 "**Human Review:** Not automatically required "
                 "by the current routing rules."
