@@ -119,7 +119,7 @@ def is_course_skills_question(question):
 # ACADEMIC ADVISOR AGENT
 # ==================================================
 
- def academic_advisor_agent(question):
+def academic_advisor_agent(question):
 
     normalized = question.lower()
 
