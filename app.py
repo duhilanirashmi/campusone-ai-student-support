@@ -1012,12 +1012,7 @@ elif result is not None:
                         "Routing reason: Question intent "
                         "requires this specialized agent."
                     )
-            else:
-                st.caption(
-                    "Selected to help with this area "
-                    "of your question."
-                )
-
+            
         if len(result["agents"]) > 1:
 
             st.info(
