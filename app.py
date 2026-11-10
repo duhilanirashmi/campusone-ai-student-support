@@ -1026,6 +1026,42 @@ elif result is not None:
                 "specialized agent. Please rephrase your question."
             )
 
+        # WEEK 3 — QUALITY & POLICY REVIEW RESULTS
+        quality_review = result.get("quality_review", {})
+
+        if developer_view and quality_review:
+            st.subheader("Quality & Policy Review Agent")
+
+            review_status = quality_review.get(
+                "status", "unknown"
+            )
+
+            st.write(
+                f"**Review Status:** {review_status.title().replace('_', ' ')}"
+            )
+
+            if quality_review.get("approved", False):
+                st.success(
+                    "Structural quality checks passed. "
+                    "Response approved for display."
+                )
+            else:
+                st.warning(
+                    "Response not approved for automated guidance."
+                )
+
+            issues = quality_review.get("issues", [])
+
+            if issues:
+                st.write("**Issues Identified:**")
+                for issue in issues:
+                    st.write("- " + issue)
+            else:
+                st.caption(
+                    "No structural validation issues detected."
+                )
+
+
     # Human escalation
 
     if result["human_review"]:
