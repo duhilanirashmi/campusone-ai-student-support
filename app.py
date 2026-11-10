@@ -1012,15 +1012,14 @@ elif result is not None:
                         "Routing reason: Question intent "
                         "requires this specialized agent."
                     )
-            
-            if len(result["agents"]) > 1 and developer_view:
-
+               
+        if len(result["agents"]) > 1 and developer_view:
             st.info(
                 "Multiple agents selected. The Coordinator "
                 "will collect their individual responses."
             )
 
-    if not result["human_review"]:
+            if not result["agents"] and not result["human_review"]:
 
         st.warning(
             "The Coordinator could not identify a suitable "
