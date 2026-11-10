@@ -94,7 +94,7 @@ def is_business_analyst_question(question):
     )
 
 
-def is_course_skills_question(question):
+ is_course_skills_question(question):
     has_learning_intent = contains_any(
         question,
         [
@@ -118,7 +118,7 @@ def is_course_skills_question(question):
 # ACADEMIC ADVISOR AGENT
 # ==================================================
 
-def academic_advisor_agent(question):
+ academic_advisor_agent(question):
 
     normalized = question.lower()
 
@@ -678,9 +678,6 @@ def create_agent_message(agent_name, question):
 # COORDINATOR — AGENT COMMUNICATION
 # ==================================================
 
-def coordinate_agents(routing_result):
-
-    
 def coordinate_agents(routing_result):
 
     if routing_result["human_review"]:
