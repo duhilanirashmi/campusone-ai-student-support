@@ -1201,6 +1201,8 @@ elif result is not None:
                     "- " + step
                 )
 
+            
+        if developer_view:
             st.success(
                 "Agent coordination completed: "
                 "recommendations from multiple "
