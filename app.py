@@ -1013,7 +1013,7 @@ elif result is not None:
                         "requires this specialized agent."
                     )
             
-        if len(result["agents"]) > 1:
+            if len(result["agents"]) > 1 and developer_view:
 
             st.info(
                 "Multiple agents selected. The Coordinator "
