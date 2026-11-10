@@ -1020,7 +1020,7 @@ elif result is not None:
                 "will collect their individual responses."
             )
 
-    elif not result["human_review"]:
+    if not result["human_review"]:
 
         st.warning(
             "The Coordinator could not identify a suitable "
