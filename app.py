@@ -1000,18 +1000,22 @@ elif result is not None:
 
             st.success(agent)
 
-            if matches:
-
-                st.caption(
-                    "Routing reason: Detected "
-                    + ", ".join(matches)
-                )
-
+            
+            if developer_view:
+                if matches:
+                    st.caption(
+                        "Routing reason: Detected "
+                        + ", ".join(matches)
+                    )
+                else:
+                    st.caption(
+                        "Routing reason: Question intent "
+                        "requires this specialized agent."
+                    )
             else:
-
                 st.caption(
-                    "Routing reason: Question intent "
-                    "requires this specialized agent."
+                    "Selected to help with this area "
+                    "of your question."
                 )
 
         if len(result["agents"]) > 1:
