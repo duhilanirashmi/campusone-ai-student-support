@@ -1082,12 +1082,13 @@ elif result is not None:
             "advisor for confirmation."
         )
 
-    else:
+    
+        elif developer_view:
+            st.write(
+                "**Human Review:** Not automatically required "
+                "by the current routing rules."
+            )
 
-        st.write(
-            "**Human Review:** Not automatically required "
-            "by the current routing rules."
-        )
 
         # Specialized agent responses
 
