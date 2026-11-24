@@ -1202,7 +1202,7 @@ elif result is not None:
                 )
 
             
-        if developer_view:
+                if developer_view and len(result["agent_responses"]) > 1 and result["combined_guidance"] is not None:
             st.success(
                 "Agent coordination completed: "
                 "recommendations from multiple "
