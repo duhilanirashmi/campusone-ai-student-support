@@ -1218,45 +1218,57 @@ elif result is not None:
 
 st.divider()
 
-with st.expander(
-    "About the CampusOne Project"
-):
+with st.expander("About the CampusOne Project"):
 
     st.write(
-        "CampusOne is an approved five-agent student support "
-        "project. The current prototype demonstrates "
-        "Coordinator routing and communication with three "
-        "specialized rule-based agent components."
+        "CampusOne is a five-agent student success and career "
+        "support system designed to provide coordinated guidance "
+        "across academics, career development, and student services."
     )
 
-    st.write(
-        "The planned system includes the Coordinator Agent, "
-        "Academic Advisor Agent, Career & Opportunity Agent, "
-        "Student Services Agent, and Quality & Policy Review Agent."
+    st.markdown("**Implemented Agent Components**")
+
+    st.markdown(
+        "- Coordinator Agent\n"
+        "- Academic Advisor Agent\n"
+        "- Career & Opportunity Agent\n"
+        "- Student Services Agent\n"
+        "- Quality & Policy Review Agent"
     )
 
+    st.markdown("**System Capabilities**")
+
+    st.markdown(
+        "- Intent-based question routing\n"
+        "- Single-agent and multi-agent coordination\n"
+        "- Structured agent communication\n"
+        "- Combined recommendations and action plans\n"
+        "- Structural quality validation\n"
+        "- Human advisor escalation\n"
+        "- Student View and Developer Demo View"
+    )
+
+    st.markdown("**Responsible AI and Human Oversight**")
+
     st.write(
-        "The current application uses controlled sample "
-        "guidance and predefined routing rules. "
-        "It does not access private student records "
+        "CampusOne applies predefined review rules to identify "
+        "requests requiring human intervention. Official university "
+        "decisions are referred to appropriate human advisors."
+    )
+
+    st.markdown("**Current Scope and Limitations**")
+
+    st.write(
+        "The current prototype uses rule-based agent components "
+        "and controlled sample guidance. It does not access private "
+        "student records, verify live university information, "
         "or make official university decisions."
     )
 
-    st.write(
-        "The Coordinator identifies relevant agents, "
-        "collects their responses, and generates a combined "
-        "action plan when multiple specialized agents contribute."
-    )
+    st.markdown("**Future Development**")
 
     st.write(
-        "For single-agent questions, CampusOne displays "
-        "the specialized agent's guidance directly without "
-        "duplicating the response."
-    )
-
-    st.write(
-        "Future development may include LLM reasoning, "
-        "retrieval-augmented generation (RAG), "
-        "MCP tools, and a dedicated Quality & "
-        "Policy Review Agent."
+        "Future enhancements may include LLM-based reasoning, "
+        "retrieval-augmented generation (RAG), MCP tool integration, "
+        "and access to verified public university resources."
     )
