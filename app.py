@@ -1094,44 +1094,44 @@ elif result is not None:
 
     if result["agent_responses"]:
 
-            st.divider()
+        st.divider()
 
-            st.subheader(
-                "Specialized Agent Responses"
-            )
+        st.subheader(
+            "Specialized Agent Responses"
+        )
 
-            for agent_result in result["agent_responses"]:
+        for agent_result in result["agent_responses"]:
 
-                with st.container(border=True):
+            with st.container(border=True):
+
+                st.markdown(
+                    "### " + agent_result["agent"]
+                )
+
+                st.write(
+                    "**Topic:** "
+                    + agent_result["topic"]
+                )
+
+                st.write(
+                    "**Recommendation:** "
+                    + agent_result["recommendation"]
+                )
+
+                st.write(
+                    "**Suggested Next Steps:**"
+                )
+
+                for step in agent_result["next_steps"]:
 
                     st.markdown(
-                        "### " + agent_result["agent"]
+                        "- " + step
                     )
 
-                    st.write(
-                        "**Topic:** "
-                        + agent_result["topic"]
-                    )
-
-                    st.write(
-                        "**Recommendation:** "
-                        + agent_result["recommendation"]
-                    )
-
-                    st.write(
-                        "**Suggested Next Steps:**"
-                    )
-
-                    for step in agent_result["next_steps"]:
-
-                        st.markdown(
-                            "- " + step
-                        )
-
-                    st.caption(
-                        "Limitation: "
-                        + agent_result["limitation"]
-                    )
+                st.caption(
+                    "Limitation: "
+                    + agent_result["limitation"]
+                )
                     
         
         # WEEK 3 — AGENT COMMUNICATION TRACE
