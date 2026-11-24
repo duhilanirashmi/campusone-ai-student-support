@@ -1084,16 +1084,15 @@ elif result is not None:
 
     
                 
-        if developer_view and not result["human_review"]:
-            st.write(
-                "**Human Review:** Not automatically required "
-                "by the current routing rules."
-            )
+    if developer_view and not result["human_review"]:
+       st.write(
+         "**Human Review:** Not automatically required "
+         "by the current routing rules."
+       )
 
+    # Specialized agent responses
 
-        # Specialized agent responses
-
-        if result["agent_responses"]:
+    if result["agent_responses"]:
 
             st.divider()
 
